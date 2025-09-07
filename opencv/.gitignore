@@ -1,0 +1,8 @@
+build_x64/
+logs/
+dist/
+.vscode/
+*.log
+Output.txt
+resource.rc
+resource.aps
