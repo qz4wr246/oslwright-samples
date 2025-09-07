@@ -1,0 +1,14 @@
+.vscode/*.local.json
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+*.log
+*.log.*
+
+.venv
+
