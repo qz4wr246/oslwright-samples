@@ -73,25 +73,32 @@ if(MSVC)
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
   if(GSTREAMER_FOUND)
-     message(STATUS "Detecting GStreamer plugins")
+    message(STATUS "Detecting GStreamer plugins")
     pkg_get_variable(GSTREAMER_PLUGINS_DIR gstreamer-1.0 pluginsdir)
     file(GLOB GSTREAMER_PLUGINS_DLLS "${GSTREAMER_PLUGINS_DIR}/*.dll")
-    add_custom_command(TARGET ${target_name} POST_BUILD
-                      COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target_name}>/gstreamer-1.0"
-                      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                      ${GSTREAMER_PLUGINS_DLLS}
-                      "$<TARGET_FILE_DIR:${target_name}>/gstreamer-1.0"
-                      COMMAND_EXPAND_LISTS)
+    foreach(file IN LISTS GSTREAMER_PLUGINS_DLLS)
+      add_custom_command(TARGET ${target_name} POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target_name}>/gstreamer-1.0"
+                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        "${file}"
+                        "$<TARGET_FILE_DIR:${target_name}>/gstreamer-1.0"
+                        COMMAND_EXPAND_LISTS)
+    endforeach()
     string(REPLACE "${GSTREAMER_PLUGINS_DIR}/" "" __PLUGINS_DLLS_REL "${GSTREAMER_PLUGINS_DLLS}")
     oslw_find_depdll(GSTREAMER_PLUGINS_DEPENDENT_DLLS
                      DLLS ${__PLUGINS_DLLS_REL}
                      WORKDIR ${GSTREAMER_PLUGINS_DIR})
+
     list(FILTER GSTREAMER_PLUGINS_DEPENDENT_DLLS EXCLUDE REGEX "lib/gstreamer-1.0")
-    add_custom_command(TARGET ${target_name} POST_BUILD
-                      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                      ${GSTREAMER_PLUGINS_DEPENDENT_DLLS}
-                      "$<TARGET_FILE_DIR:${target_name}>"
-                      COMMAND_EXPAND_LISTS)
+    message("###GSTREAMER_PLUGINS_DEPENDENT_DLLS:= ${GSTREAMER_PLUGINS_DEPENDENT_DLLS}")
+
+    foreach(file IN LISTS GSTREAMER_PLUGINS_DEPENDENT_DLLS)
+      add_custom_command(TARGET ${target_name} POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        "${file}"
+                        "$<TARGET_FILE_DIR:${target_name}>"
+                        COMMAND_EXPAND_LISTS)
+    endforeach()
   endif()
 endif()
 if(MSVC)
