@@ -28,7 +28,7 @@ if defined LOGFILE goto :DO_SCRIPT
 @REM ----------------------------------------------------------------
 set VS_VERSION=2022
 set VS_EDITION=Community
-set "OSLW_ROOT_DIR=%SCRIPT_DIR%\..\.."
+set "OSLW_ROOT_DIR=%SCRIPT_DIR%\..\..\oslwright"
 set "BUILD_DIR=%SCRIPT_DIR%\build_x64"
 set "INSTALL_DIR=%SCRIPT_DIR%\dist"
 @REM set "CMAKE_OPTIONS="
