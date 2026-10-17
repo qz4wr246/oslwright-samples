@@ -1,6 +1,14 @@
 #----------------------------------------------------------------------------
 # Application rule
 #----------------------------------------------------------------------------
+
+# Qt MSVC directory
+set(QT_MSVC_DIR "C:/Qt/6.12.0/msvc2022_64" CACHE STRING "Path to Qt MSVC directory")
+
+list(APPEND OSLW_FRAMEWORK_PATH ${QT_MSVC_DIR})
+list(APPEND CMAKE_PREFIX_PATH ${QT_MSVC_DIR})
+
+# Application
 set(target_name myapp)
 add_executable(${target_name})
 
@@ -35,9 +43,7 @@ target_link_options(${target_name} PRIVATE
   $<$<CONFIG:Release>:/LTCG /OPT:REF /OPT:ICF /INCREMENTAL:NO>
 )
 
-#
 # Dependencies
-#
 find_package(cxxopts REQUIRED)
 target_link_libraries(${target_name} PRIVATE cxxopts::cxxopts)
 
@@ -57,6 +63,10 @@ target_link_libraries(${target_name} PRIVATE ${OpenCV_LIBS})
 find_package(cvui CONFIG REQUIRED)
 target_link_libraries(${target_name} PRIVATE cvui::cvui)
 
+find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
+target_link_libraries(${target_name} PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
+
+
 #[[
 # genelate pdb file for Release build.
 if(MSVC)
@@ -69,7 +79,7 @@ endif()
 #]]
 
 if(MSVC)
-  # copy gstreamer plugins
+  # Gstreamer のモジュール等のDLLをビルドディレクトリへコピー
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
   if(GSTREAMER_FOUND)
@@ -101,14 +111,29 @@ if(MSVC)
   endif()
 endif()
 if(MSVC)
-  # copy external dlls to bindir.
+  # 依存DLLをビルドディレクトリへコピー
   oslw_copy_depdll(TARGET ${target_name})
+endif()
+
+if(MSVC)
+  # Qtのplugin をビルドディレクトリへコピー
+  if(TARGET Qt6::windeployqt)
+      get_target_property(WINDEPLOYQT_EXECUTABLE Qt6::windeployqt LOCATION)
+  endif()
+
+  if(WINDEPLOYQT_EXECUTABLE)
+      add_custom_command(TARGET ${target_name} POST_BUILD
+          COMMAND "${WINDEPLOYQT_EXECUTABLE}" "$<TARGET_FILE:${target_name}>"
+          COMMENT "Running windeployqt for ${target_name}..."
+      )
+  endif()
 endif()
 
 if(MSVC)
   # set startup project for Visual Studio.
   set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "${target_name}")
 endif()
+
 #----------------------------------------------------------------------------
 # Install Rules
 #----------------------------------------------------------------------------
@@ -118,6 +143,7 @@ install(TARGETS ${target_name}
   ARCHIVE DESTINATION lib COMPONENT Application
 )
 
+# Application依存DLLをインストール
 if(MSVC)
   if(GSTREAMER_PLUGINS_DLLS)
     # install gstreamer plugins
@@ -135,6 +161,18 @@ if(MSVC)
     COMPONENT Application
     EXCLUDE "${EXCLUDE_DLLS}"
   )
+endif()
+
+# Qtのpluginをインストールする
+include(QtCMakeHelpers OPTIONAL RESULT_VARIABLE qt_helpers_found)
+if(TARGET Qt6::Core)
+  qt_generate_deploy_app_script(
+      TARGET ${target_name}
+      OUTPUT_SCRIPT deploy_script.cmake
+      # QMLアプリの場合は以下を指定
+      # NO_TRANSLATIONS # 翻訳ファイルを省く場合は有効化
+  )
+  install(SCRIPT ${deploy_script.cmake})
 endif()
 
 #[[

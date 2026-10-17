@@ -16,7 +16,7 @@ if(MSVC)
     include(${CMAKE_SOURCE_DIR}/cmake/oslwright.cmake)
   endif()
   if(OSLW_FRAMEWORK_PATH)
-    set(CMAKE_PREFIX_PATH "${OSLW_FRAMEWORK_PATH}")
+    list(APPEND CMAKE_PREFIX_PATH ${OSLW_FRAMEWORK_PATH})
   endif()
 endif()
 
@@ -93,5 +93,3 @@ add_subdirectory(src)
 #   DISPLAY_NAME "Documentation"
 #   INSTALL_TYPES Full)
 #----------------------------- End of file ----------------------------------
-
-

@@ -48,6 +48,8 @@ int main(int argc, char *argv[]) {
     fs::path gst_plugin_path = exec_path.parent_path() / "gstreamer-1.0";
     _setenv("GST_PLUGIN_PATH", gst_plugin_path.string().c_str());
 
+    // NOTE: WINDOW_GUI_NORMAL を指定すると、Qtの拡張UIが非表示になります
+    cv::namedWindow(WINDOW_NAME, cv::WINDOW_AUTOSIZE | cv::WINDOW_GUI_NORMAL);
     // CVUIの初期化
     cvui::init(WINDOW_NAME);
 
@@ -90,6 +92,10 @@ int main(int argc, char *argv[]) {
         cvui::imshow(WINDOW_NAME, frame);
         const int key = cv::waitKey(1);
         if(key == 'q'){
+            break;
+        }
+        // ウィンドウの可視性フラグを確認 (閉じられると 0 未満または 0 になる)
+        if (cv::getWindowProperty(WINDOW_NAME, cv::WND_PROP_VISIBLE) < 1) {
             break;
         }
     }
