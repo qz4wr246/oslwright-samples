@@ -13,6 +13,8 @@
 #define CVUI_DISABLE_COMPILATION_NOTICES
 #define CVUI_IMPLEMENTATION
 #include <cvui.h>
+#include <gst/gst.h>
+#include <gst/video/video.h>
 
 #include "version.h"
 
@@ -48,6 +50,14 @@ int main(int argc, char *argv[]) {
     fs::path gst_plugin_path = exec_path.parent_path() / "gstreamer-1.0";
     _setenv("GST_PLUGIN_PATH", gst_plugin_path.string().c_str());
 
+    gst_init(nullptr, nullptr);
+
+    std::string pipeline_str =
+        "videotestsrc ! "
+        "clockoverlay auto-resize=false time-format=%Y-%m-%d%H:%M:%S ! "
+        "videoconvert ! "
+        "appsink";
+
     // NOTE: WINDOW_GUI_NORMAL を指定すると、Qtの拡張UIが非表示になります
     cv::namedWindow(WINDOW_NAME, cv::WINDOW_AUTOSIZE | cv::WINDOW_GUI_NORMAL);
     // CVUIの初期化
@@ -55,10 +65,11 @@ int main(int argc, char *argv[]) {
 
     // VideoCaptureの初期化
     cv::VideoCapture  cap;
-    cap.open("videotestsrc ! clockoverlay auto-resize=false time-format=%Y-%m-%d%H:%M:%S ! videoconvert ! appsink", cv::CAP_GSTREAMER);
+    cap.open(pipeline_str, cv::CAP_GSTREAMER);
     if (! cap.isOpened()) {
         return 1;
     }
+
     cv::Mat frame = cv::Mat(400, 600, CV_8UC3);
     cv::Mat image;
     cv::Mat processed;
