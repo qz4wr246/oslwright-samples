@@ -94,5 +94,8 @@ if exist "%BUILD_DIR%\CPackConfig.cmake" (
     exit %ERRORLEVEL%
   )
 )
+echo -----------------------------------------------
+echo - Done.
+echo -----------------------------------------------
 exit /b 0
 @REM ------------------------ End of file. ------------------------

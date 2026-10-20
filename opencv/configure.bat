@@ -39,9 +39,14 @@ set "INSTALL_DIR=%SCRIPT_DIR%\dist"
 set CMAKE_CONFIGURATION_TYPES=Release;Debug
 
 call :GetMsvcGenerator %VS_VERSION% MSVC_GENERATOR_VERSION
+@REM MSVC generator
 set MSVC_GENERATOR_ARCH=x64
 set MSVC_GENERATOR=-G "Visual Studio %MSVC_GENERATOR_VERSION%" -A %MSVC_GENERATOR_ARCH%
 set CMAKE_GENERATOR=%MSVC_GENERATOR%
+@REM Ninja generator
+@REM  set NINJA_GENERATOR=-G "Ninja Multi-Config"
+@REM  set CMAKE_GENERATOR=%NINJA_GENERATOR%
+@REM  set "CMAKE_MAKE_PROGRAM=%OSLW_ROOT_DIR%\.venv\Scripts\ninja.exe"
 
 @REM ----------------------------------------------------------------
 @REM Setup building environment
@@ -56,7 +61,7 @@ set CMAKE_EXE=C:\Program Files\CMake\bin\cmake.exe
 @REM  CMAKE_TOOLCHAIN_FILE default stting
 if not defined CMAKE_TOOLCHAIN_FILE (
   if defined OSLW_ROOT_DIR (
-    set CMAKE_TOOLCHAIN_FILE=%OSLW_ROOT_DIR%\cmake\oslwright.cmake
+    set "CMAKE_TOOLCHAIN_FILE=%OSLW_ROOT_DIR%\cmake\oslwright.cmake"
   )
 )
 
@@ -80,6 +85,10 @@ if exist "%SCRIPT_DIR%\tools\pkg-config\bin\pkg-config.exe" (
 if defined CMAKE_TOOLCHAIN_FILE (
   set CMAKE_OPTIONS=%CMAKE_OPTIONS% ^
     -DCMAKE_TOOLCHAIN_FILE="%CMAKE_TOOLCHAIN_FILE%"
+)
+if defined CMAKE_MAKE_PROGRAM (
+  set CMAKE_OPTIONS=%CMAKE_OPTIONS% ^
+    -DCMAKE_MAKE_PROGRAM="%CMAKE_MAKE_PROGRAM%"
 )
 
 @REM Remove cmake cache files.

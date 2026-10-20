@@ -44,6 +44,8 @@ target_link_options(${target_name} PRIVATE
 )
 
 # Dependencies
+find_package(PkgConfig REQUIRED)
+
 find_package(cxxopts REQUIRED)
 target_link_libraries(${target_name} PRIVATE cxxopts::cxxopts)
 
@@ -63,49 +65,40 @@ target_link_libraries(${target_name} PRIVATE ${OpenCV_LIBS})
 find_package(cvui CONFIG REQUIRED)
 target_link_libraries(${target_name} PRIVATE cvui::cvui)
 
+find_package(cvui CONFIG REQUIRED)
+target_link_libraries(${target_name} PRIVATE cvui::cvui)
+
 find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
 target_link_libraries(${target_name} PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
 
-
-#[[
-# genelate pdb file for Release build.
-if(MSVC)
-  # genalate pdb file for release
-  target_compile_options(${target_name} PRIVATE "$<$<CONFIG:Release>:/Zi>")
-  target_link_options(${target_name} PRIVATE "$<$<CONFIG:Release>:/DEBUG>")
-  target_link_options(${target_name} PRIVATE "$<$<CONFIG:Release>:/OPT:REF>")
-  target_link_options(${target_name} PRIVATE "$<$<CONFIG:Release>:/OPT:ICF>")
-endif()
-#]]
+pkg_check_modules(CAIRO REQUIRED IMPORTED_TARGET cairo)
+target_link_libraries(${target_name} PRIVATE PkgConfig::CAIRO)
 
 if(MSVC)
   # Gstreamer のモジュール等のDLLをビルドディレクトリへコピー
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
+  pkg_check_modules(GSTREAMER REQUIRED IMPORTED_TARGET gstreamer-1.0)
   if(GSTREAMER_FOUND)
+    target_link_libraries(${target_name} PRIVATE PkgConfig::GSTREAMER)
     message(STATUS "Detecting GStreamer plugins")
     pkg_get_variable(GSTREAMER_PLUGINS_DIR gstreamer-1.0 pluginsdir)
     file(GLOB GSTREAMER_PLUGINS_DLLS "${GSTREAMER_PLUGINS_DIR}/*.dll")
     foreach(file IN LISTS GSTREAMER_PLUGINS_DLLS)
       add_custom_command(TARGET ${target_name} POST_BUILD
-                        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target_name}>/gstreamer-1.0"
+                        COMMAND ${CMAKE_COMMAND} -E make_directory "\"$<TARGET_FILE_DIR:${target_name}>/gstreamer-1.0\""
                         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        "${file}"
-                        "$<TARGET_FILE_DIR:${target_name}>/gstreamer-1.0"
+                        "\"${file}\""
+                        "\"$<TARGET_FILE_DIR:${target_name}>/gstreamer-1.0/\""
                         COMMAND_EXPAND_LISTS)
     endforeach()
-    string(REPLACE "${GSTREAMER_PLUGINS_DIR}/" "" __PLUGINS_DLLS_REL "${GSTREAMER_PLUGINS_DLLS}")
-    oslw_find_depdll(GSTREAMER_PLUGINS_DEPENDENT_DLLS
-                     DLLS ${__PLUGINS_DLLS_REL}
-                     WORKDIR ${GSTREAMER_PLUGINS_DIR})
 
-    list(FILTER GSTREAMER_PLUGINS_DEPENDENT_DLLS EXCLUDE REGEX "lib/gstreamer-1.0")
+    oslw_find_depdll(GSTREAMER_PLUGINS_DEPENDENT_DLLS
+                     DLLS "${GSTREAMER_PLUGINS_DLLS}")
 
     foreach(file IN LISTS GSTREAMER_PLUGINS_DEPENDENT_DLLS)
       add_custom_command(TARGET ${target_name} POST_BUILD
                         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        "${file}"
-                        "$<TARGET_FILE_DIR:${target_name}>"
+                        "\"${file}\""
+                        "\"$<TARGET_FILE_DIR:${target_name}>/\""
                         COMMAND_EXPAND_LISTS)
     endforeach()
   endif()
@@ -128,6 +121,17 @@ if(MSVC)
       )
   endif()
 endif()
+
+#[[
+# genelate pdb file for Release build.
+if(MSVC)
+  # genalate pdb file for release
+  target_compile_options(${target_name} PRIVATE "$<$<CONFIG:Release>:/Zi>")
+  target_link_options(${target_name} PRIVATE "$<$<CONFIG:Release>:/DEBUG>")
+  target_link_options(${target_name} PRIVATE "$<$<CONFIG:Release>:/OPT:REF>")
+  target_link_options(${target_name} PRIVATE "$<$<CONFIG:Release>:/OPT:ICF>")
+endif()
+#]]
 
 if(MSVC)
   # set startup project for Visual Studio.

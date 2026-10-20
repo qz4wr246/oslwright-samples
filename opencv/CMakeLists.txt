@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.30)
 #----------------------------------------------------------------------------
 # Project rule
 #----------------------------------------------------------------------------
+
+# ビルド情報の出力
+# set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # get version
 file(STRINGS src/version.h version REGEX "#define[ \\t]+APP_VERSION[ \\t]+\".+\"")
 string(REGEX MATCH "[0-9.]+" APP_VERSION "${version}" "")
